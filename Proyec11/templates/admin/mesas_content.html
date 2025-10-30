@@ -1,0 +1,46 @@
+<!-- templates/admin/mesas_content.html -->
+<div class="card">
+  <div class="card-header"><strong>➕ Crear Nueva Mesa</strong></div>
+  <div class="card-body">
+    <form id="form-crear-mesa" onsubmit="return false;">
+      <div class="row">
+        <div><label>Número de Mesa *</label><input type="number" id="new-mesa-numero" placeholder="Ej: 1" required min="1"></div>
+        <div><label>Capacidad *</label><input type="number" id="new-mesa-capacidad" placeholder="Personas" required min="1"></div>
+        <div><label>Ubicación</label><input type="text" id="new-mesa-ubicacion" placeholder="Ej: Interior, Terraza"></div>
+        <div><label>Tipo</label>
+          <select id="new-mesa-tipo">
+            <option value="interior">Interior</option>
+            <option value="terraza">Terraza</option>
+            <option value="vip">VIP</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Estado</label>
+          <select id="new-mesa-disponible">
+            <option value="true">Disponible</option>
+            <option value="false">No Disponible</option>
+          </select>
+        </div>
+      </div>
+      <button class="primary" type="button" onclick="window.crearMesa()">Crear Mesa</button>
+    </form>
+  </div>
+</div>
+
+<!-- Sección de listado de mesas -->
+<div class="card" style="margin-top:16px;">
+  <div class="card-header">
+    <strong>🪑 Mesas <span id="mesas-count">0</span></strong>
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <label style="margin: 0;">
+        <input type="checkbox" id="filter-mesas-disponibles" onchange="window.filtrarMesas()">
+        Solo disponibles
+      </label>
+      <button class="secondary" onclick="window.cargarMesas()">🔄 Actualizar</button>
+    </div>
+  </div>
+  <div class="card-body" id="mesas-table">
+    <!-- La tabla de mesas se cargará dinámicamente por static/js/admin/mesas.js -->
+  </div>
+</div>

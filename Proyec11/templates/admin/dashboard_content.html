@@ -1,0 +1,205 @@
+<!-- templates/admin/dashboard_content.html -->
+<div class="dashboard-grid">
+  <!-- Estadísticas de Hoy (usando datos ya cargados) -->
+  <div class="card" id="estadisticas-hoy">
+    <div class="card-header">
+      <h3>📊 Estadísticas de Hoy</h3>
+    </div>
+    <div class="card-body">
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="pedidos-hoy">0</div>
+          <div class="stat-label">Pedidos</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="reservas-hoy">0</div>
+          <div class="stat-label">Reservas</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="ventas-hoy">$0</div>
+          <div class="stat-label">Ventas</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="mesas-ocupadas">0/0</div>
+          <div class="stat-label">Mesas Ocupadas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actividad Reciente -->
+  <div class="card" id="actividad-reciente">
+    <div class="card-header">
+      <h3>🚀 Actividad Reciente</h3>
+    </div>
+    <div class="card-body">
+      <ul class="activity-list" id="lista-actividad">
+        <li class="activity-item">No hay actividad reciente</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Alertas -->
+  <div class="card" id="alertas">
+    <div class="card-header">
+      <h3>⚠️ Alertas</h3>
+    </div>
+    <div class="card-body">
+      <ul class="alerts-list" id="lista-alertas">
+        <li class="alert-item">No hay alertas</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Pedidos Pendientes -->
+  <div class="card" id="pedidos-pendientes">
+    <div class="card-header">
+      <h3>📦 Pedidos Pendientes</h3>
+    </div>
+    <div class="card-body">
+      <div class="pedidos-list" id="lista-pedidos-pendientes">
+        <p class="text-muted">No hay pedidos pendientes</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Mostrar datos ya cargados desde Python
+document.addEventListener('DOMContentLoaded', () => {
+  const estado = window.estadoInicial || {};
+  
+  // Estadísticas
+  const pedidosHoy = (estado.pedidos || []).filter(p => {
+    const fecha = new Date(p.fecha_pedido);
+    return fecha.toDateString() === new Date().toDateString();
+  }).length;
+  
+  const reservasHoy = (estado.reservas || []).filter(r => {
+    const fecha = new Date(r.fecha);
+    return fecha.toDateString() === new Date().toDateString();
+  }).length;
+  
+  const ventasHoy = (estado.pedidos || []).filter(p => {
+    const fecha = new Date(p.fecha_pedido);
+    return fecha.toDateString() === new Date().toDateString();
+  }).reduce((sum, p) => sum + (parseFloat(p.total) || 0), 0);
+  
+  const mesasOcupadas = (estado.mesas || []).filter(m => !m.disponible).length;
+  const totalMesas = estado.mesas ? estado.mesas.length : 0;
+  
+  document.getElementById('pedidos-hoy').textContent = pedidosHoy;
+  document.getElementById('reservas-hoy').textContent = reservasHoy;
+  document.getElementById('ventas-hoy').textContent = '$' + ventasHoy.toLocaleString();
+  document.getElementById('mesas-ocupadas').textContent = `${mesasOcupadas}/${totalMesas}`;
+  
+  // Pedidos pendientes
+  const pedidosPendientes = (estado.pedidos || []).filter(p => p.estado === 'pendiente');
+  const contenedorPedidos = document.getElementById('lista-pedidos-pendientes');
+  
+  if (pedidosPendientes.length === 0) {
+    contenedorPedidos.innerHTML = '<p class="text-muted">No hay pedidos pendientes</p>';
+  } else {
+    let html = '';
+    pedidosPendientes.forEach(pedido => {
+      html += `
+        <div class="pedido-card-mini" data-id="${pedido.id}">
+          <div class="pedido-header-mini">
+            <span class="badge-tipo ${pedido.tipo}">${pedido.tipo}</span>
+            <span>#${pedido.codigo_pedido || pedido.id}</span>
+          </div>
+          <div class="pedido-cliente">
+            Cliente: ${pedido.usuario?.nombre || 'N/A'}
+          </div>
+          <div class="pedido-total">
+            Total: $${Number(pedido.total).toLocaleString()}
+          </div>
+          <div class="pedido-acciones-mini">
+            <button class="btn btn-xs btn-primary" onclick="window.cargarVista('pedidos')">Ver</button>
+            <button class="btn btn-xs btn-success" onclick="window.actualizarEstadoPedido(${pedido.id}, 'preparando')">Preparar</button>
+            <button class="btn btn-xs btn-danger" onclick="window.actualizarEstadoPedido(${pedido.id}, 'cancelado')">Cancelar</button>
+          </div>
+        </div>
+      `;
+    });
+    contenedorPedidos.innerHTML = html;
+  }
+  
+  // Alertas de inventario bajo
+  const alertas = (estado.inventario_bajo || []).map(item => ({
+    tipo: 'warning',
+    mensaje: `Stock bajo de ${item.nombre}: ${item.cantidad} ${item.unidad}`,
+    fecha: new Date().toISOString()
+  }));
+  
+  const contenedorAlertas = document.getElementById('lista-alertas');
+  if (alertas.length === 0) {
+    contenedorAlertas.innerHTML = '<li class="alert-item">No hay alertas</li>';
+  } else {
+    contenedorAlertas.innerHTML = alertas.map(alerta => `
+      <li class="alert-item alert-warning">
+        <span class="alert-text">${alerta.mensaje}</span>
+        <button class="btn btn-xs" onclick="window.cargarVista('inventario')">Revisar</button>
+      </li>
+    `).join('');
+  }
+});
+</script>
+
+<style>
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.stat-item {
+  text-align: center;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1976d2;
+}
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+.pedido-card-mini {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: white;
+}
+.pedido-header-mini {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+.pedido-acciones-mini {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.alert-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>

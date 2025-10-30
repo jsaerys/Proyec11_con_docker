@@ -1,0 +1,47 @@
+<!-- templates/admin/menu_content.html -->
+<div class="card">
+  <div class="card-header"><strong>➕ Crear Nuevo Item</strong></div>
+  <div class="card-body">
+    <form id="form-crear-item" onsubmit="return false;">
+      <div class="row">
+        <div><label>Nombre *</label><input type="text" id="new-menu-nombre" placeholder="Nombre del plato" required></div>
+        <div><label>Precio *</label><input type="number" id="new-menu-precio" min="0" step="0.01" placeholder="Precio" required></div>
+        <div><label>Categoría</label>
+          <select id="new-menu-categoria">
+            <option value="">-- Sin categoría --</option>
+            <!-- Categorías se cargarán dinámicamente -->
+          </select>
+        </div>
+        <div><label>Disponible</label>
+          <select id="new-menu-disponible">
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div><label>Descripción</label><textarea id="new-menu-descripcion" placeholder="Descripción del plato" rows="2"></textarea></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Imagen</label>
+          <input type="file" id="new-menu-imagen" accept="image/*">
+          <div id="preview-imagen" style="margin-top: 10px; display: none;">
+            <img id="img-preview" src="" alt="Vista previa" style="max-width: 200px; max-height: 200px;">
+          </div>
+        </div>
+      </div>
+      <button class="primary" type="button" onclick="window.crearMenuItem()">Crear Item</button>
+    </form>
+  </div>
+</div>
+
+<!-- Sección de listado de items -->
+<div class="card" style="margin-top:16px;">
+  <div class="card-header"><strong>📋 Items del Menú <span id="menu-items-count">0</span></strong></div>
+  <div class="card-body" id="menu-items-table">
+    <!-- La tabla de items se cargará dinámicamente por static/js/admin/menu.js -->
+  </div>
+</div>
+
+<!-- Modal de edición (se creará dinámicamente) -->

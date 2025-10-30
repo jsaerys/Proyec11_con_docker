@@ -1,0 +1,91 @@
+<!-- templates/admin/pedidos_content.html -->
+<div class="card">
+  <div class="card-header">
+    <strong>📋 Todos los Pedidos</strong>
+  </div>
+  <div class="card-body">
+    <div id="tabla-pedidos">
+      <p>Cargando pedidos...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// Esta función se ejecutará automáticamente al cargar el HTML
+async function cargarPedidos() {
+  try {
+    // Usamos la MISMA ruta que ya existe en tu admin.py
+    const response = await fetch('/admin/api/pedidos');
+    const pedidos = await response.json();
+    
+    let html = `
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tipo</th>
+            <th>Mesa/Cliente</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
+    pedidos.forEach(p => {
+      const cliente = p.tipo === 'mesa' ? 
+        (p.mesa_id || 'N/A') : 
+        (p.nombre_receptor || p.usuario?.nombre || 'N/A');
+      
+      html += `
+        <tr>
+          <td>${p.id}</td>
+          <td><span class="badge ${p.tipo}">${p.tipo}</span></td>
+          <td>${cliente}</td>
+          <td>$${Number(p.total).toLocaleString()}</td>
+          <td>
+            <select onchange="actualizarEstado(${p.id}, this.value)" ${p.id === window.currentUserId ? '' : ''}>
+              <option value="pendiente" ${p.estado === 'pendiente' ? 'selected' : ''}>Pendiente</option>
+              <option value="preparando" ${p.estado === 'preparando' ? 'selected' : ''}>Preparando</option>
+              <option value="enviado" ${p.estado === 'enviado' ? 'selected' : ''}>Enviado</option>
+              <option value="entregado" ${p.estado === 'entregado' ? 'selected' : ''}>Entregado</option>
+              <option value="cancelado" ${p.estado === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+              <option value="rechazado" ${p.estado === 'rechazado' ? 'selected' : ''}>Rechazado</option>
+            </select>
+          </td>
+          <td>${new Date(p.fecha_pedido).toLocaleString()}</td>
+          <td>
+            <button class="btn btn-sm btn-primary" onclick="verDetalles(${p.id})">Ver</button>
+          </td>
+        </tr>
+      `;
+    });
+    
+    html += `
+        </tbody>
+      </table>
+    `;
+    
+    document.getElementById('tabla-pedidos').innerHTML = html;
+    
+  } catch (error) {
+    console.error('Error:', error);
+    document.getElementById('tabla-pedidos').innerHTML = '<p class="text-danger">Error al cargar pedidos</p>';
+  }
+}
+
+// Funciones que ya existen en tu adminPanel.js
+function actualizarEstado(pedidoId, estado) {
+  // Esta función ya está definida globalmente en adminPanel.js
+  window.actualizarEstadoPedido(pedidoId, estado);
+}
+
+function verDetalles(pedidoId) {
+  alert('Función de detalles en desarrollo. ID: ' + pedidoId);
+}
+
+// Cargar automáticamente al incluir este HTML
+document.addEventListener('DOMContentLoaded', cargarPedidos);
+</script>
